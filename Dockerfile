@@ -1,6 +1,7 @@
 # Docker image based on Alpine Linux embedding the Volatility 3 framework (https://github.com/volatilityfoundation/volatility3).
 #
-# Maintained by sk4la <sk4la.box@gmail.com>.
+# Maintained by Chris Bensch <chris.bensch@gmail.com>.
+# Initial credits to sk4la <sk4la.box@gmail.com> for original work.
 #
 # To build:
 #   $ docker build -t volatility/volatility:latest .
@@ -59,10 +60,10 @@ FROM alpine:${DEF_ALPINE_VERSION}
 ARG DEF_USERNAME=root
 ARG DEF_INSTALL_PREFIX=/usr
 
-LABEL name="volatility"                                         \
+LABEL name="volatility"                                     \
   version="0.1"                                             \
   uri="https://github.com/volatilityfoundation/volatility3" \
-  maintainer="sk4la <sk4la.box@gmail.com>"                  \
+  maintainer="Chris Bensch <chris.bensch@gmail.com>"        \
   status="beta"
 
 USER ${DEF_USERNAME}
