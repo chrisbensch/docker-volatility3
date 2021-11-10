@@ -91,6 +91,9 @@ WORKDIR ${DEF_INSTALL_PREFIX}/lib/yara-python
 
 # Install the Python bindings for YARA
 RUN python3 setup.py install
+RUN apk add build-base python3-dev
+RUN pip3 install pycrypto distorm3
+RUN apk --purge del build-base python3-dev
 
 WORKDIR ${DEF_INSTALL_PREFIX}/lib/volatility3/volatility/symbols/
 
@@ -109,3 +112,5 @@ WORKDIR /
 ENTRYPOINT [ "/usr/bin/env", "volatility" ]
 
 CMD [ "--help" ]
+
+#ENTRYPOINT ["/usr/local/bin/vol-switch.sh"]
