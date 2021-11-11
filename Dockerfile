@@ -1,47 +1,25 @@
-# Docker image based on Alpine Linux embedding the Volatility 3 framework (https://github.com/volatilityfoundation/volatility3).
-#
-# Maintained by Chris Bensch <chris.bensch@gmail.com>.
-# Initial credits to sk4la <sk4la.box@gmail.com> for original work.
-#
-# To build:
-#   $ docker build -t volatility/volatility:latest .
-#
-# Additionaly, one can set the following build arguments (using the --build-arg option) to customize the build:
-#   - DEF_ALPINE_VERSION [3.11]
-#   - DEF_INSTALL_PREFIX [/usr]
-#   - DEF_USERNAME [root]
-#
-# To run as a standalone container:
-#   $ docker run -v $PWD:/case:ro --rm --cap-drop ALL volatility/volatility
-#   $ docker run -v $PWD:/case:ro --rm --cap-drop ALL volatility/volatility -f /case/volatile.dmp windows.info
-#
-# One can also remove the ":ro" suffix (in the -v option) to allow writing to disk.
-#
-# See https://github.com/volatilityfoundation/volatility3 for details.
+FROM debian:11
 
-ARG DEF_ALPINE_VERSION=3.11
+LABEL maintainer="chris.bensch@gmail.com"
 
-FROM alpine:${DEF_ALPINE_VERSION} AS builder
+ENV DEBIAN_FRONTEND noninteractive
 
-ARG DEF_USERNAME=root
+RUN apt update && \
+  apt -y install python3 python3-pip git build-essential python3-dev curl wget unzip gzip tar && \
+  apt -y autoremove && \
+  apt -y autoclean && \
+  rm -rf /var/lib/apt/lists/*
 
-USER ${DEF_USERNAME}
+RUN pip install pycrypto distorm3 volatility3
 
-WORKDIR /tmp/build/
-
-# Install system dependencies
-RUN apk add --no-cache --virtual .build \
-  curl                                \
-  gcc                                 \
-  git                                 \
-  musl-dev                            \
-  python3-dev                         \
-  unzip
+WORKDIR /usr/lib
 
 # Build the Python bindings for YARA
 RUN git clone --recursive https://github.com/VirusTotal/yara-python && \
   cd yara-python && \
   python3 setup.py build
+
+WORKDIR /usr/local/lib/python3.9/dist-packages/volatility3-2.0.0-py3.9.egg/volatility3/symbols/
 
 # Fetch the symbols from the Volatility 3 framework
 RUN curl -fL https://downloads.volatilityfoundation.org/volatility3/symbols/linux.zip -o linux.zip && \
@@ -50,67 +28,13 @@ RUN curl -fL https://downloads.volatilityfoundation.org/volatility3/symbols/linu
   mkdir mac && \
   unzip mac.zip -d mac && \
   curl -fL https://downloads.volatilityfoundation.org/volatility3/symbols/windows.zip -o windows.zip && \
-  unzip windows.zip
+  unzip windows.zip && \
+  git clone https://github.com/JPCERTCC/Windows-Symbol-Tables.git /tmp/Windows-Symbol-Tables && \
+  mv /tmp/Windows-Symbol-Tables/symbols/windows/ntkrnlmp.pdb/* /usr/local/lib/python3.9/dist-packages/volatility3-2.0.0-py3.9.egg/volatility3/symbols/windows/ntkrnlmp.pdb/ && \
+  rm *.zip && \
+  rm -rf /tmp/Windows-Symbol-Tables
 
-RUN apk --purge del \
-  .build
+# Final Cleanup
+RUN apt -y autoremove && apt -y autoclean && rm -rf /var/lib/apt/lists/*
 
-FROM alpine:${DEF_ALPINE_VERSION}
-
-ARG DEF_USERNAME=root
-ARG DEF_INSTALL_PREFIX=/usr
-
-LABEL name="volatility"                                     \
-  version="0.1"                                             \
-  uri="https://github.com/volatilityfoundation/volatility3" \
-  maintainer="Chris Bensch <chris.bensch@gmail.com>"        \
-  status="beta"
-
-USER ${DEF_USERNAME}
-
-WORKDIR ${DEF_INSTALL_PREFIX}/lib
-
-# Install system dependencies
-RUN apk add --no-cache \
-  python3 && \
-  apk add --no-cache --virtual .build \
-  git
-
-COPY --from=builder --chown="${DEF_USERNAME}:${DEF_USERNAME}" /tmp/build/yara-python yara-python
-
-RUN find . -type d -exec chmod 755 {} \; && \
-  find . -type f -exec chmod 644 {} \;
-
-# Install the Volatility 3 framework
-RUN git clone https://github.com/volatilityfoundation/volatility3.git && \
-  cd volatility3 && \
-  python3 setup.py install && \
-  ln -sf ${DEF_INSTALL_PREFIX}/bin/vol ${DEF_INSTALL_PREFIX}/bin/volatility
-
-WORKDIR ${DEF_INSTALL_PREFIX}/lib/yara-python
-
-# Install the Python bindings for YARA
-RUN python3 setup.py install
-RUN apk add build-base python3-dev
-RUN pip3 install pycrypto distorm3
-RUN apk --purge del build-base python3-dev
-
-WORKDIR ${DEF_INSTALL_PREFIX}/lib/volatility3/volatility/symbols/
-
-COPY --from=builder --chown="${DEF_USERNAME}:${DEF_USERNAME}" /tmp/build/linux linux
-COPY --from=builder --chown="${DEF_USERNAME}:${DEF_USERNAME}" /tmp/build/mac mac
-COPY --from=builder --chown="${DEF_USERNAME}:${DEF_USERNAME}" /tmp/build/windows windows
-
-RUN find . -type d -exec chmod 755 {} \; && \
-  find . -type f -exec chmod 644 {} \;
-
-RUN apk --purge del \
-  .build
-
-WORKDIR /
-
-ENTRYPOINT [ "/usr/bin/env", "volatility" ]
-
-CMD [ "--help" ]
-
-#ENTRYPOINT ["/usr/local/bin/vol-switch.sh"]
+WORKDIR /data
