@@ -21,7 +21,7 @@ RUN git clone --recursive https://github.com/VirusTotal/yara-python && \
 
 WORKDIR /usr/local/lib/python3.9/dist-packages/volatility3-2.0.0-py3.9.egg/volatility3/symbols/
 
-# Fetch the symbols from the Volatility 3 framework
+# Fetch the symbols from the Volatility Fondation and JPCERTCC
 RUN curl -fL https://downloads.volatilityfoundation.org/volatility3/symbols/linux.zip -o linux.zip && \
   unzip linux.zip && \
   curl -fL https://downloads.volatilityfoundation.org/volatility3/symbols/mac.zip -o mac.zip && \
