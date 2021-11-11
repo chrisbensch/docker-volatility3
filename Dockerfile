@@ -1,16 +1,16 @@
-FROM debian:11
+FROM debian:11.1-slim
 
 LABEL maintainer="chris.bensch@gmail.com"
 
 ENV DEBIAN_FRONTEND noninteractive
 
-RUN apt update && \
-  apt -y install python3 python3-pip git build-essential python3-dev curl wget unzip gzip tar && \
+RUN apt update && apt -y upgrade && \
+  apt -y --no-install-recommends install python3 python3-pip git build-essential python3-dev curl wget unzip gzip tar && \
   apt -y autoremove && \
   apt -y autoclean && \
   rm -rf /var/lib/apt/lists/*
 
-RUN pip install pycrypto distorm3 volatility3
+RUN pip install pycrypto distorm3 volatility3 openpyxl ujson
 
 WORKDIR /usr/lib
 
