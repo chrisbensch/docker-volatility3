@@ -10,7 +10,7 @@ RUN apt update && apt -y upgrade && \
   apt -y autoclean && \
   rm -rf /var/lib/apt/lists/*
 
-RUN pip install pycrypto distorm3 volatility3 openpyxl ujson
+RUN pip install pycrypto distorm3 openpyxl ujson volatility3
 
 WORKDIR /usr/lib
 
@@ -19,7 +19,7 @@ RUN git clone --recursive https://github.com/VirusTotal/yara-python && \
   cd yara-python && \
   python3 setup.py build
 
-WORKDIR /usr/local/lib/python3.9/dist-packages/volatility3-2.0.0-py3.9.egg/volatility3/symbols/
+WORKDIR /usr/local/lib/python3.9/dist-packages/volatility3/symbols/
 
 # Fetch the symbols from the Volatility Fondation and JPCERTCC
 RUN curl -fL https://downloads.volatilityfoundation.org/volatility3/symbols/linux.zip -o linux.zip && \
@@ -30,7 +30,7 @@ RUN curl -fL https://downloads.volatilityfoundation.org/volatility3/symbols/linu
   curl -fL https://downloads.volatilityfoundation.org/volatility3/symbols/windows.zip -o windows.zip && \
   unzip windows.zip && \
   git clone https://github.com/JPCERTCC/Windows-Symbol-Tables.git /tmp/Windows-Symbol-Tables && \
-  mv /tmp/Windows-Symbol-Tables/symbols/windows/ntkrnlmp.pdb/* /usr/local/lib/python3.9/dist-packages/volatility3-2.0.0-py3.9.egg/volatility3/symbols/windows/ntkrnlmp.pdb/ && \
+  mv /tmp/Windows-Symbol-Tables/symbols/windows/ntkrnlmp.pdb/* /usr/local/lib/python3.9/dist-packages/volatility3/symbols/windows/ntkrnlmp.pdb/ && \
   rm *.zip && \
   rm -rf /tmp/Windows-Symbol-Tables
 
