@@ -14,10 +14,12 @@ RUN pip install pycrypto distorm3 openpyxl ujson volatility3
 
 WORKDIR /usr/lib
 
+# SHould this be /tmp ? to save disk space?
 # Build the Python bindings for YARA
 RUN git clone --recursive https://github.com/VirusTotal/yara-python && \
   cd yara-python && \
-  python3 setup.py build
+  python3 setup.py build && \
+  python3 setup.py install
 
 WORKDIR /usr/local/lib/python3.9/dist-packages/volatility3/symbols/
 
